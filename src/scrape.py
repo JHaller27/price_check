@@ -23,13 +23,3 @@ def try_get_price(url: str) -> Optional[str]:
 
 async def get_price(url: str) -> str:
 	return retry(lambda: try_get_price(url), lambda p: p is not None, 3)
-
-
-def main():
-	url = 'https://www.microsoft.com/hu-hu/microsoft-365/p/excel/CFQ7TTC0HR4R'
-	price = get_price(url)
-	print(price)
-
-
-if __name__ == '__main__':
-	main()
