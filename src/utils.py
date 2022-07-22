@@ -1,4 +1,17 @@
 import re
+from typing import Optional
+
+
+def dict_deep_get(base: dict, *paths: str, default: Optional = None):
+	curr = base
+	for p in paths:
+		if curr is None:
+			break
+		curr = curr.get(p)
+	else:
+		return curr
+
+	return default
 
 
 def retry(run_fn, check_fn, retry_count):

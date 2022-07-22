@@ -1,6 +1,6 @@
 from utils import get_params_from_livesite
-from scrape import get_price
-from connectors import PricingInfo, get_connector_prices
+from scrape import PricingInfo as LiveSitePricingInfo, get_pricing
+from connectors import PricingInfo as ConnectorPricingInfo, get_connector_prices
 
 import aiohttp
 from functools import cached_property
@@ -16,12 +16,12 @@ from rich import box
 @dataclass
 class Result:
 	live_url: str
-	live_price: str
+	live_price: LiveSitePricingInfo
 	connector_url: str
-	connector_prices: list[PricingInfo]
+	connector_prices: list[ConnectorPricingInfo]
 
 	@cached_property
-	def first_match(self) -> Optional[PricingInfo]:
+	def first_match(self) -> Optional[ConnectorPricingInfo]:
 		for c in self.connector_prices:
 			if self.live_price == c.current_price:
 				return c
@@ -31,7 +31,7 @@ class Result:
 async def compare(live_url: str) -> Result:
 	print('<', end='')
 	async with aiohttp.ClientSession() as session:
-		livesite_task = get_price(session, live_url)
+		livesite_task = get_pricing(session, live_url)
 
 		bigId, locale = get_params_from_livesite(live_url)
 		pricing_list = [p async for p in get_connector_prices(session, bigId, locale)]
@@ -39,7 +39,7 @@ async def compare(live_url: str) -> Result:
 		livesite_price = await livesite_task
 	print('>', end='')
 
-	return Result(live_url, livesite_price, pricing_list[0].url, [p for p in pricing_list])
+	return Result(live_url, livesite_price, pricing_list[0].url, pricing_list)
 
 
 def get_urls():
@@ -55,13 +55,20 @@ def get_urls():
 			return urls
 
 
+def get_match_emoji(test: bool) -> str:
+	return '[green]:heavy_check_mark:[/green]' if test else '[red]x[/red]'
+
+
 def print_result(r: Result) -> None:
 	print('Live site:', r.live_url)
 	print('Connector:', r.connector_url)
-	tbl = Table('Match', 'SkuId', 'Price', box=box.SIMPLE)
-	tbl.add_row('', 'Live site', r.live_price)
+
+	tbl = Table('Match', 'SkuId', 'Price', 'Promobar', box=box.SIMPLE)
+	tbl.add_row('', 'Live site', r.live_price.price, r.live_price.promobarPrice)
+
 	for c in r.connector_prices:
-		tbl.add_row('[green]:heavy_check_mark:[/green]' if c.current_price == r.live_price else '[red]x[/red]', c.sku_id, c.current_price)
+		tbl.add_row(get_match_emoji(c.current_price == r.live_price), c.sku_id, c.current_price, c.promobar_message or '-')
+
 	rprint(tbl)
 
 
