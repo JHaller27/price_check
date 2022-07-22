@@ -52,7 +52,10 @@ def get_params_from_livesite(url: str) -> tuple[str, str]:
 
 async def main():
 	while True:
-		live_url = input('livesite url> ')
+		try:
+			live_url = input()
+		except EOFError:
+			return
 
 		livesite_task = asyncio.create_task(get_price(live_url))
 
@@ -75,6 +78,7 @@ async def main():
 				else:
 					print('               ')
 				print(p.current_price)
+		print()
 
 
 if __name__ == '__main__':
