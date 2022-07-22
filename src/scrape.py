@@ -55,9 +55,7 @@ def get_promo_price(soup: BeautifulSoup) -> Optional[str]:
 
 
 async def get_pricing(session: aiohttp.ClientSession, url: str) -> Optional[PricingInfo]:
-	print('l', end='')
 	soup = await get_html(session, url)
-	print('L', end='')
 
 	if soup is None:
 		return None

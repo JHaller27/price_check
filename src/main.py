@@ -27,14 +27,12 @@ class Result:
 
 
 async def compare(live_url: str) -> Result:
-	print('<', end='')
 	async with aiohttp.ClientSession() as session:
 		livesite_task = get_pricing(session, live_url)
 
 		bigId, locale = get_params_from_livesite(live_url)
 		connector_pricing = await get_connector_prices(session, bigId, locale)
 		livesite_price = await livesite_task
-	print('>', end='')
 
 	return Result(livesite_price, connector_pricing)
 
@@ -69,11 +67,11 @@ def print_result(r: Result) -> None:
 	print('Connector:', r.connector_pricing.url)
 
 	# Print sku pricing table
-	tbl = Table('Match', 'SkuId', 'Price', 'Promobar', box=box.SIMPLE)
-	tbl.add_row('', 'Live site', r.live_price.price, r.live_price.promobar_message)
+	tbl = Table('Match', 'SkuId', 'Price', box=box.SIMPLE)
+	tbl.add_row('', 'Live site', r.live_price.price)
 
 	for c in r.connector_pricing.sku_pricing:
-		tbl.add_row(get_match_emoji(c.current_price == r.live_price), c.sku_id, c.current_price, r.connector_pricing.promobar_message or '-')
+		tbl.add_row(get_match_emoji(c.current_price == r.live_price), c.sku_id, c.current_price)
 
 	rprint(tbl)
 
