@@ -1,6 +1,6 @@
 from utils import get_params_from_livesite
 from scrape import PricingInfo as LiveSitePricingInfo, get_pricing
-from connectors import PricingInfo as ConnectorPricingInfo, get_connector_prices
+from connectors import PricingInfo as ConnectorPricingInfo, SkuPricing, get_connector_prices
 
 import aiohttp
 from functools import cached_property
@@ -18,11 +18,11 @@ class Result:
 	live_url: str
 	live_price: LiveSitePricingInfo
 	connector_url: str
-	connector_prices: list[ConnectorPricingInfo]
+	connector_pricing: ConnectorPricingInfo
 
 	@cached_property
-	def first_match(self) -> Optional[ConnectorPricingInfo]:
-		for c in self.connector_prices:
+	def first_matching_sku_price(self) -> Optional[SkuPricing]:
+		for c in self.connector_pricing.sku_pricing:
 			if self.live_price == c.current_price:
 				return c
 		return None
@@ -34,12 +34,11 @@ async def compare(live_url: str) -> Result:
 		livesite_task = get_pricing(session, live_url)
 
 		bigId, locale = get_params_from_livesite(live_url)
-		pricing_list = [p async for p in get_connector_prices(session, bigId, locale)]
-
+		connector_pricing = await get_connector_prices(session, bigId, locale)
 		livesite_price = await livesite_task
 	print('>', end='')
 
-	return Result(live_url, livesite_price, pricing_list[0].url, pricing_list)
+	return Result(live_url, livesite_price, connector_pricing.url, connector_pricing)
 
 
 def get_urls():
@@ -66,7 +65,7 @@ def print_result(r: Result) -> None:
 	tbl = Table('Match', 'SkuId', 'Price', 'Promobar', box=box.SIMPLE)
 	tbl.add_row('', 'Live site', r.live_price.price, r.live_price.promobarPrice)
 
-	for c in r.connector_prices:
+	for c in r.connector_pricing.sku_pricing:
 		tbl.add_row(get_match_emoji(c.current_price == r.live_price), c.sku_id, c.current_price, c.promobar_message or '-')
 
 	rprint(tbl)
