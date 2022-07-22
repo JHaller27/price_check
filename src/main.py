@@ -1,10 +1,16 @@
+import rich
 from utils import get_params_from_livesite
 from scrape import get_price
 from connectors import PricingInfo, get_connector_prices
 
+from functools import cached_property
 import asyncio
 from dataclasses import dataclass
 from typing import Optional
+
+from rich import print as rprint
+from rich.table import Table
+from rich import box
 
 
 @dataclass
@@ -14,9 +20,10 @@ class Result:
 	connector_url: str
 	connector_prices: list[PricingInfo]
 
-	def get_first_diff(self) -> Optional[PricingInfo]:
+	@cached_property
+	def first_match(self) -> Optional[PricingInfo]:
 		for c in self.connector_prices:
-			if self.live_price != c.current_price:
+			if self.live_price == c.current_price:
 				return c
 		return None
 
@@ -44,25 +51,29 @@ def get_urls():
 			return urls
 
 
+def print_result(r: Result) -> None:
+	print('Live site:', r.live_url)
+	print('Connector:', r.connector_url)
+	tbl = Table('Match', 'SkuId', 'Price', box=box.SIMPLE)
+	tbl.add_row('', 'Live site', r.live_price)
+	for c in r.connector_prices:
+		tbl.add_row('[green]:heavy_check_mark:[/green]' if c.current_price == r.live_price else '[red]x[/red]', c.sku_id, c.current_price)
+	rprint(tbl)
+
+
 async def main():
 	urls = get_urls()
 
 	print("Gathering results...")
 	results: list[Result] = await asyncio.gather(*[compare(url) for url in urls])
 
-	diffs = [r for r in results if r.get_first_diff() is not None]
-
-	if len(diffs) == 0:
-		print("No diffs!")
-		return
-
-	for d in diffs:
-		print('Live site:', d.live_url)
-		print('   ', d.live_price)
-		print('Connector:', d.connector_url)
-		c = d.get_first_diff()
-		print('   ', c.current_price, f'({c.sku_id})')
+	for r in results:
 		print()
+		print_result(r)
+
+	if len(results) == 0:
+		rprint("[yellow]No results![/yellow]")
+		return
 
 
 if __name__ == '__main__':
