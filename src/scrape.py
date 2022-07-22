@@ -4,11 +4,10 @@ from bs4 import BeautifulSoup
 from dataclasses import dataclass
 from typing import Optional
 
-from pathlib import Path
-
 
 @dataclass
 class PricingInfo:
+	url: str
 	price: str
 	promobarPrice: Optional[str]
 
@@ -66,4 +65,4 @@ async def get_pricing(session: aiohttp.ClientSession, url: str) -> Optional[Pric
 	price = get_price(soup)
 	promo_price = get_promo_price(soup)
 
-	return PricingInfo(price, promo_price)
+	return PricingInfo(url, price, promo_price)

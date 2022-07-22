@@ -15,9 +15,7 @@ from rich import box
 
 @dataclass
 class Result:
-	live_url: str
 	live_price: LiveSitePricingInfo
-	connector_url: str
 	connector_pricing: ConnectorPricingInfo
 
 	@cached_property
@@ -38,7 +36,7 @@ async def compare(live_url: str) -> Result:
 		livesite_price = await livesite_task
 	print('>', end='')
 
-	return Result(live_url, livesite_price, connector_pricing.url, connector_pricing)
+	return Result(livesite_price, connector_pricing)
 
 
 def get_urls():
@@ -59,8 +57,8 @@ def get_match_emoji(test: bool) -> str:
 
 
 def print_result(r: Result) -> None:
-	print('Live site:', r.live_url)
-	print('Connector:', r.connector_url)
+	print('Live site:', r.live_price.url)
+	print('Connector:', r.connector_pricing.url)
 
 	tbl = Table('Match', 'SkuId', 'Price', 'Promobar', box=box.SIMPLE)
 	tbl.add_row('', 'Live site', r.live_price.price, r.live_price.promobarPrice)
