@@ -60,11 +60,12 @@ def print_result(r: Result) -> None:
 	print('Live site:', r.live_price.url)
 	print('Connector:', r.connector_pricing.url)
 
+	# Print sku pricing table
 	tbl = Table('Match', 'SkuId', 'Price', 'Promobar', box=box.SIMPLE)
 	tbl.add_row('', 'Live site', r.live_price.price, r.live_price.promobarPrice)
 
 	for c in r.connector_pricing.sku_pricing:
-		tbl.add_row(get_match_emoji(c.current_price == r.live_price), c.sku_id, c.current_price, c.promobar_message or '-')
+		tbl.add_row(get_match_emoji(c.current_price == r.live_price), c.sku_id, c.current_price, r.connector_pricing.promobar_message or '-')
 
 	rprint(tbl)
 
