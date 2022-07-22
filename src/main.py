@@ -56,16 +56,35 @@ def get_match_emoji(test: bool) -> str:
 	return '[green]:heavy_check_mark:[/green]' if test else '[red]x[/red]'
 
 
+def compare_promo_messages(livesite: str, connector: str) -> bool:
+	if '/' not in connector:
+		return connector == livesite
+
+	parts = connector.split('/')
+	return all([p in livesite for p in parts])
+
+
 def print_result(r: Result) -> None:
 	print('Live site:', r.live_price.url)
 	print('Connector:', r.connector_pricing.url)
 
 	# Print sku pricing table
 	tbl = Table('Match', 'SkuId', 'Price', 'Promobar', box=box.SIMPLE)
-	tbl.add_row('', 'Live site', r.live_price.price, r.live_price.promobarPrice)
+	tbl.add_row('', 'Live site', r.live_price.price, r.live_price.promobar_message)
 
 	for c in r.connector_pricing.sku_pricing:
 		tbl.add_row(get_match_emoji(c.current_price == r.live_price), c.sku_id, c.current_price, r.connector_pricing.promobar_message or '-')
+
+	rprint(tbl)
+
+	# Print promobar table
+	if r.live_price.promobar_message is None:
+		print('No promobar')
+		return
+
+	tbl = Table('Match', 'Who', 'Promobar pricing', box=box.SIMPLE)
+	tbl.add_row('', 'Live site', r.live_price.promobar_message)
+	tbl.add_row(get_match_emoji(compare_promo_messages(r.live_price.promobar_message, r.connector_pricing.promobar_message)), 'Connector', r.connector_pricing.promobar_message)
 
 	rprint(tbl)
 

@@ -9,7 +9,7 @@ from typing import Optional
 class PricingInfo:
 	url: str
 	price: str
-	promobarPrice: Optional[str]
+	promobar_message: Optional[str]
 
 
 async def try_get_html(session: aiohttp.ClientSession, url: str) -> Optional[BeautifulSoup]:
