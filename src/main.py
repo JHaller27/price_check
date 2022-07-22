@@ -1,5 +1,4 @@
 from utils import get_params_from_livesite
-
 from scrape import get_price
 from connectors import PricingInfo, get_connector_prices
 
