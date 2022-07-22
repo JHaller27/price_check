@@ -14,6 +14,14 @@ def dict_deep_get(base: dict, *paths: str, default: Optional = None):
 	return default
 
 
+def clean_string(s: Optional[str]) -> Optional[str]:
+	if s is None:
+		return s
+
+	s = s.replace(u'\xa0', u' ')
+	return s
+
+
 def retry(run_fn, check_fn, retry_count):
 	for _ in range(retry_count):
 		resp = run_fn()

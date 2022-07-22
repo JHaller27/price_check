@@ -71,7 +71,7 @@ def print_result(r: Result) -> None:
 	tbl.add_row('', 'Live site', r.live_price.price)
 
 	for c in r.connector_pricing.sku_pricing:
-		tbl.add_row(get_match_emoji(c.current_price == r.live_price), c.sku_id, c.current_price)
+		tbl.add_row(get_match_emoji(c.current_price == r.live_price.price), c.sku_id, c.current_price)
 
 	rprint(tbl)
 

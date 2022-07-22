@@ -1,3 +1,5 @@
+from utils import *
+
 import aiohttp
 import re
 from bs4 import BeautifulSoup
@@ -63,4 +65,4 @@ async def get_pricing(session: aiohttp.ClientSession, url: str) -> Optional[Pric
 	price = get_price(soup)
 	promo_price = get_promo_price(soup)
 
-	return PricingInfo(url, price, promo_price)
+	return PricingInfo(url, clean_string(price), clean_string(promo_price))

@@ -39,6 +39,6 @@ async def get_connector_prices(session: aiohttp.ClientSession, big_id: str, loca
 		sku_info_dict = data['skuInfo']
 		for sku_id, sku_info in sku_info_dict.items():
 			price = sku_info['price']
-			pi.sku_pricing.append(SkuPricing(sku_id, price['currentPrice'], price.get('recurrencePrice')))
+			pi.sku_pricing.append(SkuPricing(sku_id, clean_string(price['currentPrice']), clean_string(price.get('recurrencePrice'))))
 
 	return pi
