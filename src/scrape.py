@@ -1,17 +1,28 @@
-from utils import *
-
-import requests
+import aiohttp
 import re
 from bs4 import BeautifulSoup
 from typing import Optional
 
 
-def try_get_price(url: str) -> Optional[str]:
-	resp = retry(lambda: requests.get(url), lambda r: r.ok, 3)
-	if resp is None:
+async def try_get_html(session: aiohttp.ClientSession, url: str) -> Optional[str]:
+	async with session.get(url) as resp:
+		if resp.status != 200:
+			return None
+		return await resp.text()
+
+
+async def try_get_price(session: aiohttp.ClientSession, url: str) -> Optional[str]:
+	text = None
+
+	for _ in range(3):
+		text = await try_get_html(session, url)
+		if text is not None:
+			break
+
+	if text is None:
 		return None
 
-	soup = BeautifulSoup(resp.text, features='html.parser')
+	soup = BeautifulSoup(text, features='html.parser')
 
 	price_container = soup.find("div", {'class': 'pi-price-text', 'id': re.compile('ProductPrice_productPrice_')})
 	if price_container is None:
@@ -21,5 +32,8 @@ def try_get_price(url: str) -> Optional[str]:
 	return price_el.text
 
 
-async def get_price(url: str) -> str:
-	return retry(lambda: try_get_price(url), lambda p: p is not None, 3)
+async def get_price(session: aiohttp.ClientSession, url: str) -> str:
+	print('l', end='')
+	retv = await try_get_price(session, url)
+	print('L', end='')
+	return retv

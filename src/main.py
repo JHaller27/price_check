@@ -1,8 +1,8 @@
-import rich
 from utils import get_params_from_livesite
 from scrape import get_price
 from connectors import PricingInfo, get_connector_prices
 
+import aiohttp
 from functools import cached_property
 import asyncio
 from dataclasses import dataclass
@@ -29,12 +29,16 @@ class Result:
 
 
 async def compare(live_url: str) -> Result:
-	livesite_task = asyncio.create_task(get_price(live_url))
+	print('<', end='')
+	async with aiohttp.ClientSession() as session:
+		livesite_task = get_price(session, live_url)
 
-	bigId, locale = get_params_from_livesite(live_url)
-	pricing_list = [p for p in get_connector_prices(bigId, locale)]
+		bigId, locale = get_params_from_livesite(live_url)
+		pricing_list = [p async for p in get_connector_prices(session, bigId, locale)]
 
-	livesite_price = await livesite_task
+		livesite_price = await livesite_task
+	print('>', end='')
+
 	return Result(live_url, livesite_price, pricing_list[0].url, [p for p in pricing_list])
 
 
