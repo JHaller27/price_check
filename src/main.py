@@ -1,4 +1,4 @@
-from utils import get_params_from_livesite
+from utils import clean_string, get_params_from_livesite
 from scrape import PricingInfo as LiveSitePricingInfo, get_pricing
 from connectors import PricingInfo as ConnectorPricingInfo, SkuPricing, get_connector_prices
 
@@ -27,7 +27,7 @@ class Result:
 
 
 async def compare(live_url: str) -> Result:
-	async with aiohttp.ClientSession() as session:
+	async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
 		livesite_task = get_pricing(session, live_url)
 
 		bigId, locale = get_params_from_livesite(live_url)
@@ -54,7 +54,13 @@ def get_match_emoji(test: bool) -> str:
 	return '[green]:heavy_check_mark:[/green]' if test else '[red]x[/red]'
 
 
-def compare_promo_messages(livesite: str, connector: str) -> bool:
+def compare_promo_messages(livesite: str | None, connector: str | None) -> bool:
+	connector = clean_string(connector)
+	livesite = clean_string(livesite)
+
+	if connector is None or livesite is None:
+		return connector == livesite
+
 	if '/' not in connector:
 		return connector == livesite
 

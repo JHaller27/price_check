@@ -27,7 +27,7 @@ class PricingInfo:
 
 async def get_connector_prices(session: aiohttp.ClientSession, big_id: str, locale: str) -> PricingInfo:
 	promobar_big_id = promobar_map.get(big_id.lower())
-	url = f'https://www.microsoft.com/msstoreapiprod/api/buybox?bigId={big_id}&locale={locale}'
+	url = f'https://localhost:5001/api/buybox?bigId={big_id}&locale={locale}'
 	if promobar_big_id is not None:
 		url += f'&promobarbigId={promobar_big_id}'
 
@@ -36,7 +36,10 @@ async def get_connector_prices(session: aiohttp.ClientSession, big_id: str, loca
 
 		pi = PricingInfo(url, [], dict_deep_get(data, 'productInfo', 'promoBarPrice', 'message'))
 
-		sku_info_dict = data['skuInfo']
+		sku_info_dict = data.get('skuInfo')
+		if sku_info_dict is None:
+			return pi
+
 		for sku_id, sku_info in sku_info_dict.items():
 			price = sku_info['price']
 			pi.sku_pricing.append(SkuPricing(sku_id, clean_string(price['currentPrice']), clean_string(price.get('recurrencePrice'))))
