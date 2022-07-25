@@ -25,23 +25,31 @@ class PricingInfo:
 	promobar_message: Optional[str]
 
 
+async def get_connector_json(session: aiohttp.ClientSession, url: str) -> dict:
+	for _ in range(3):
+		async with session.get(url, headers={'ms-cv': 'JamesTest', 'x-ms-test': 'JamesTest'}) as resp:
+			if resp.status == 200:
+				data = await resp.json()
+				return data
+
+
 async def get_connector_prices(session: aiohttp.ClientSession, big_id: str, locale: str) -> PricingInfo:
 	promobar_big_id = promobar_map.get(big_id.lower())
 	url = f'https://localhost:5001/api/buybox?bigId={big_id}&locale={locale}'
+	# url = f'https://microsoft.com/msstoreapiprod/api/buybox?bigId={big_id}&locale={locale}'
 	if promobar_big_id is not None:
 		url += f'&promobarbigId={promobar_big_id}'
 
-	async with session.get(url, headers={'ms-cv': 'JamesTest', 'x-ms-test': 'JamesTest'}) as resp:
-		data = await resp.json()
+	data = await get_connector_json(session, url)
 
-		pi = PricingInfo(url, [], dict_deep_get(data, 'productInfo', 'promoBarPrice', 'message'))
+	pi = PricingInfo(url, [], dict_deep_get(data, 'productInfo', 'promoBarPrice', 'message'))
 
-		sku_info_dict = data.get('skuInfo')
-		if sku_info_dict is None:
-			return pi
+	sku_info_dict = data.get('skuInfo')
+	if sku_info_dict is None:
+		return pi
 
-		for sku_id, sku_info in sku_info_dict.items():
-			price = sku_info['price']
-			pi.sku_pricing.append(SkuPricing(sku_id, clean_string(price['currentPrice']), clean_string(price.get('recurrencePrice'))))
+	for sku_id, sku_info in sku_info_dict.items():
+		price = sku_info['price']
+		pi.sku_pricing.append(SkuPricing(sku_id, clean_string(price['currentPrice']), clean_string(price.get('recurrencePrice'))))
 
 	return pi
