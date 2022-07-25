@@ -35,8 +35,8 @@ async def get_connector_json(session: aiohttp.ClientSession, url: str) -> dict:
 
 async def get_connector_prices(session: aiohttp.ClientSession, big_id: str, locale: str) -> PricingInfo:
 	promobar_big_id = promobar_map.get(big_id.lower())
-	url = f'https://localhost:5001/api/buybox?bigId={big_id}&locale={locale}'
-	# url = f'https://microsoft.com/msstoreapiprod/api/buybox?bigId={big_id}&locale={locale}'
+	# url = f'https://localhost:5001/api/buybox?bigId={big_id}&locale={locale}'
+	url = f'https://microsoft.com/msstoreapiprod/api/buybox?bigId={big_id}&locale={locale}'
 	if promobar_big_id is not None:
 		url += f'&promobarbigId={promobar_big_id}'
 
