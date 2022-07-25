@@ -54,7 +54,7 @@ def get_match_emoji(test: bool) -> str:
 	return '[green]:heavy_check_mark:[/green]' if test else '[red]x[/red]'
 
 
-def compare_promo_messages(livesite: str | None, connector: str | None) -> bool:
+def compare_recur_messages(livesite: str | None, connector: str | None) -> bool:
 	connector = clean_string(connector)
 	livesite = clean_string(livesite)
 
@@ -77,7 +77,16 @@ def print_result(r: Result) -> None:
 	tbl.add_row('', 'Live site', r.live_price.price)
 
 	for c in r.connector_pricing.sku_pricing:
-		tbl.add_row(get_match_emoji(c.current_price == r.live_price.price), c.sku_id, c.current_price)
+		conn_price = c.current_price
+		trail_msg = ''
+		is_match = conn_price == r.live_price.price
+
+		if c.recurrence_price is not None:
+			conn_price = c.recurrence_price
+			trail_msg = ' (recurrence)'
+			is_match = compare_recur_messages(r.live_price.price, conn_price)
+
+		tbl.add_row(get_match_emoji(is_match), c.sku_id, conn_price + trail_msg)
 
 	rprint(tbl)
 
@@ -88,7 +97,7 @@ def print_result(r: Result) -> None:
 
 	tbl = Table('Match', 'Who', 'Promobar pricing', box=box.SIMPLE)
 	tbl.add_row('', 'Live site', r.live_price.promobar_message)
-	tbl.add_row(get_match_emoji(compare_promo_messages(r.live_price.promobar_message, r.connector_pricing.promobar_message)), 'Connector', r.connector_pricing.promobar_message)
+	tbl.add_row(get_match_emoji(compare_recur_messages(r.live_price.promobar_message, r.connector_pricing.promobar_message)), 'Connector', r.connector_pricing.promobar_message)
 
 	rprint(tbl)
 
