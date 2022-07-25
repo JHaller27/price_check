@@ -1,5 +1,5 @@
 from utils import clean_string, get_params_from_livesite
-from scrape import PricingInfo as LiveSitePricingInfo, get_pricing
+from livesite import PricingInfo as LiveSitePricingInfo, get_pricing
 from connectors import PricingInfo as ConnectorPricingInfo, SkuPricing, get_connector_prices
 
 import aiohttp
