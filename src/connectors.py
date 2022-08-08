@@ -1,14 +1,9 @@
 from utils import *
+from promobar import get_promobar_id
 
 import aiohttp
-import json
 from dataclasses import dataclass
 from typing import Optional
-
-
-with open('./data/promobarbigids.json') as fp:
-	obj = json.load(fp)
-promobar_map = {k.lower(): v for k, v in obj.items()}
 
 
 @dataclass
@@ -34,9 +29,10 @@ async def get_connector_json(session: aiohttp.ClientSession, url: str) -> dict:
 
 
 async def get_connector_prices(session: aiohttp.ClientSession, big_id: str, locale: str) -> PricingInfo:
-	promobar_big_id = promobar_map.get(big_id.lower())
 	# url = f'https://localhost:5001/api/buybox?bigId={big_id}&locale={locale}'
 	url = f'https://microsoft.com/msstoreapiprod/api/buybox?bigId={big_id}&locale={locale}'
+
+	promobar_big_id = get_promobar_id(big_id)
 	if promobar_big_id is not None:
 		url += f'&promobarbigId={promobar_big_id}'
 
@@ -50,6 +46,10 @@ async def get_connector_prices(session: aiohttp.ClientSession, big_id: str, loca
 
 	for sku_id, sku_info in sku_info_dict.items():
 		price = sku_info['price']
+		if price is None:
+			pi.sku_pricing.append(SkuPricing(sku_id, 'Not found', None))
+			return pi
+
 		pi.sku_pricing.append(SkuPricing(sku_id, clean_string(price['currentPrice']), clean_string(price.get('recurrencePrice'))))
 
 	return pi

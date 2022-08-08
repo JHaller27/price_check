@@ -1,4 +1,4 @@
-from utils import clean_string, get_params_from_livesite
+from utils import clean_string, get_params_from_livesite, input_lines
 from livesite import PricingInfo as LiveSitePricingInfo, get_pricing
 from connectors import PricingInfo as ConnectorPricingInfo, SkuPricing, get_connector_prices
 
@@ -35,19 +35,6 @@ async def compare(live_url: str) -> Result:
 		livesite_price = await livesite_task
 
 	return Result(livesite_price, connector_pricing)
-
-
-def get_urls():
-	urls = []
-	while True:
-		try:
-			live_url = input()
-			if live_url == '':
-				return urls
-			urls.append(live_url)
-
-		except EOFError:
-			return urls
 
 
 def get_match_emoji(test: bool) -> str:
@@ -103,7 +90,7 @@ def print_result(r: Result) -> None:
 
 
 async def main():
-	urls = get_urls()
+	urls = input_lines()
 
 	print("Gathering results...")
 	results: list[Result] = await asyncio.gather(*[compare(url) for url in urls])

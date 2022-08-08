@@ -37,6 +37,11 @@ def get_price(soup: BeautifulSoup) -> Optional[str]:
 		return None
 
 	price_el = price_container.span
+	if price_el is None:
+		price_el = price_container.h3
+		if price_el is None:
+			return None
+
 	return price_el.text
 
 
